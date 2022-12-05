@@ -35,8 +35,8 @@ void sanitizeInputStr(std::string &input) {
     }
 }
 
-void generateSequence(std::vector<unsigned>& elf, unsigned lower, unsigned upper) {
-    std::iota(elf.begin(), elf.begin()+(upper-lower)+1, lower);
+void generateSequence(std::vector<unsigned>& elf, unsigned lower, unsigned size) {
+    std::iota(elf.begin(), elf.begin()+size, lower);
 }
 
 int main() {
@@ -59,11 +59,13 @@ int main() {
         std::stringstream ss(curLine);
         ss >> elf1_lower >> elf1_upper >> elf2_lower >> elf2_upper;
 
-        std::vector<unsigned> elf1((elf1_upper-elf1_lower)+1);
-        generateSequence(elf1, elf1_lower, elf1_upper);
+        unsigned size = (elf1_upper-elf1_lower)+1;
+        std::vector<unsigned> elf1(size);
+        generateSequence(elf1, elf1_lower, size);
 
-        std::vector<unsigned> elf2((elf2_upper-elf2_lower)+1);
-        generateSequence(elf2, elf2_lower, elf2_upper);
+        size = (elf2_upper-elf2_lower)+1;
+        std::vector<unsigned> elf2(size);
+        generateSequence(elf2, elf2_lower, size);
 
         if (doesOverlap(elf1, elf2)) {
             totalPairs++;
