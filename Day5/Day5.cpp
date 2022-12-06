@@ -49,28 +49,16 @@ bool isDigit(const std::string& str) {
             str.find_first_not_of(" 0123456789") == std::string::npos;
 }
 
-size_t getStackIndex(const size_t crateIndex) {
-    // hacky, I hate this
-    if (crateIndex <= 3) {
-        return 0;
-    } else if (crateIndex > 3 && crateIndex <= 7) {
-        return 1;
-    } else if (crateIndex > 7 && crateIndex <= 11) {
-        return 2;
-    } else if (crateIndex > 11 && crateIndex <= 15) {
-        return 3;
-    } else if (crateIndex > 15 && crateIndex <= 19) {
-        return 4;
-    } else if (crateIndex > 19 && crateIndex <= 23) {
-        return 5;
-    } else if (crateIndex > 23 && crateIndex <= 27) {
-        return 6;
-    } else if (crateIndex > 27 && crateIndex <= 31) {
-        return 7;
-    } else if (crateIndex > 31) {
-        return 8;
+size_t getStackIndex(size_t crateIndex) {
+    if (crateIndex < 4) return 0;
+
+    size_t stackIndex = 0;
+    while (crateIndex > 4) {
+        crateIndex -= 4;
+        stackIndex++;
     }
-    return 0;
+
+    return stackIndex;
 }
 
 // push the crate names into the desired stack
