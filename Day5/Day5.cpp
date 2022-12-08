@@ -12,6 +12,7 @@
 #include <sstream>
 #include <string>
 #include <stack>
+#include <vector>
 
 //#include "Sequence.h"
 
@@ -72,6 +73,7 @@ void pushCratesToStack(std::string &input, std::vector<std::stack<char>>& crateS
     }
 }
 
+// for part 1
 void moveCrates(std::vector<Sequence>& seqList, std::vector<std::stack<char>>& crates) {
     for(auto const& sequence : seqList) {
         unsigned numCratesToMove = sequence.seq[0];
@@ -82,6 +84,29 @@ void moveCrates(std::vector<Sequence>& seqList, std::vector<std::stack<char>>& c
             crates[dest].push(crates[src].top());
             crates[src].pop();
         }   
+    }
+}
+
+// for part 2
+void moveMultipleCrates(std::vector<Sequence>& seqList, std::vector<std::stack<char>>& crates) {
+    for(auto const& sequence : seqList) {
+        unsigned numCratesToMove = sequence.seq[0];
+        unsigned src = sequence.seq[1]-1;
+        unsigned dest = sequence.seq[2]-1;
+
+        // push onto a temp stack then pop back
+        // onto the new stack - result is as if the whole
+        // chunk were moved at once
+        std::stack<char> tmp;
+        for(int i = 0; i < numCratesToMove; ++i) {
+            tmp.push(crates[src].top());
+            crates[src].pop();
+        }
+
+        for(int i = 0; i < numCratesToMove; ++i) {
+            crates[dest].push(tmp.top());
+            tmp.pop();
+        }
     }
 }
 
@@ -147,9 +172,7 @@ int main() {
     // respective stacks from the bottom up
     std::vector<std::stack<char>> crates(totalStacks);
     std::for_each(slice.rbegin(), slice.rend(),
-        [&](auto s) {
-            pushCratesToStack(s, crates);
-    });
+        [&](auto s) { pushCratesToStack(s, crates); });
 
     // parse the move, from and to commands
     // since ifs is now pointing at the first 
@@ -174,7 +197,8 @@ int main() {
 
     // Finally, carry out the sequence on the stack
     // of crates
-    moveCrates(masterSequence, crates);
+    // moveCrates(masterSequence, crates);
+    moveMultipleCrates(masterSequence, crates);
 
     ifs.close();
     std::string result("");
