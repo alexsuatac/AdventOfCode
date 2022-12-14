@@ -48,8 +48,10 @@ void parseFilesystem(std::vector<std::string>& cmd) {
     if (cmd[1] == "cd") {
         if (cmd[2] == ".."){ 
             // change to the parent directory
+            auto subDirSize = curDir->totalSize;
             navHistory.pop();
             curDir = navHistory.top();
+            curDir->totalSize += subDirSize;
         } else {
             for (size_t i = 0; i < curDir->subdirs.size(); ++i) {
                 if (curDir->subdirs[i].name == cmd[2]) {

@@ -19,7 +19,7 @@ void findVisible(const std::vector<int> &treeline)
     auto addToMapFromLeft = [&](auto tree) {
         for(auto i = 0; i < treeline.size(); ++i) {
             auto maxSoFar = *std::max_element(treeline.begin(), treeline.begin()+i);
-            if(treeline[i] > maxSoFar) {
+            if(treeline[i] > maxSoFar && (i!=0 && i!=treeline.size()-1)) {
                 // mark that the tree is visible from at least one direction
                 // if the tree is already marked visible this will have no effect
                 vis_map[row][i] = 1;
@@ -32,7 +32,7 @@ void findVisible(const std::vector<int> &treeline)
     auto addToMapFromRight = [&](auto tree) {
         for(auto i = treeline.size()-1; i > 0; --i) {
             auto maxSoFar = *std::max_element(treeline.rbegin(), treeline.rend()-(i+1));
-            if(treeline[i] > maxSoFar) {
+            if(treeline[i] > maxSoFar && (i!=0 && i!=treeline.size()-1)) {
                 // mark that the tree is visible from at least one direction
                 // if the tree is already marked visible this will have no effect
                 vis_map[row][i] = 1;
@@ -40,10 +40,6 @@ void findVisible(const std::vector<int> &treeline)
         }
     };
     std::for_each(treeline.rbegin(), treeline.rend(), addToMapFromRight);
-
-    // mark both edges as visible
-    vis_map[row][0] = 1;
-    vis_map[row][treeline.size()-1] = 1;
 
     // reset row counter when moving onto transpose of matrix
     if(++row == treeline.size()-2) row = 0;
@@ -84,8 +80,9 @@ int main()
     std::for_each(gridT.begin() + 1, gridT.end() - 1,
                   [&](auto t) {findVisible({t.begin(), t.end()}); });
     
-    size_t totalVisible = 4; // the four corners of the grid that are not visited in this algorithm
-
+    int outer = (grid.size() * grid[0].size());
+    int inner = ((grid.size())-2) * ((grid[0].size())-2);
+    size_t totalVisible = outer - inner; // the edges are all visible
     for(auto const& col : vis_map) {
         totalVisible += col.second.size();
     }
