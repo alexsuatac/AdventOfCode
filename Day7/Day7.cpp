@@ -11,6 +11,7 @@
 #include <algorithm>
 #include <iostream>
 #include <fstream>
+#include <numeric>
 #include <string>
 #include <sstream>
 #include <stack>
@@ -25,7 +26,10 @@ struct dir {
 // refernce to the currently active directory
 static std::stack<dir*> navHistory = {};
 static std::vector<dir> filesystem = {};
+static int totalSize = 0;
+static std::vector<int> totalSizes = {};
 static dir* curDir = nullptr;
+static const int MAX_SIZE = 100000;
 
 // check if there is a non-number in the string
 // return false if there is anything other than digits
@@ -48,10 +52,12 @@ void parseFilesystem(std::vector<std::string>& cmd) {
     if (cmd[1] == "cd") {
         if (cmd[2] == ".."){ 
             // change to the parent directory
-            auto subDirSize = curDir->totalSize;
+            if((curDir->totalSize + totalSize) <= MAX_SIZE) {
+                totalSize += curDir->totalSize;
+                totalSizes.push_back(totalSize);
+            }
             navHistory.pop();
             curDir = navHistory.top();
-            curDir->totalSize += subDirSize;
         } else {
             for (size_t i = 0; i < curDir->subdirs.size(); ++i) {
                 if (curDir->subdirs[i].name == cmd[2]) {
@@ -70,17 +76,8 @@ void parseFilesystem(std::vector<std::string>& cmd) {
 
 }
 
-int accumulateSize(std::vector<dir> dirs, dir* cur, int& sum) {
-    if (cur->subdirs.empty()) {
-        return cur->totalSize;
-    }
-
-    for (auto c : dirs) {
-        cur = &c;
-        sum += accumulateSize(c.subdirs, cur, sum);
-    }
-
-    return sum;
+int accumulateSize() {
+   return std::accumulate(totalSizes.begin(), totalSizes.end(), 0);
 }
 
 int main() {
@@ -105,10 +102,7 @@ int main() {
 
     // now that the filesystem is mapped, add the total
     // size of the subdirectories to the parent directories
-    int sum = 0;
-    int& totalSum = sum;
-    accumulateSize(filesystem, &filesystem[0], totalSum);
-    std::cout << totalSum << std::endl;
+    std::cout << accumulateSize() << std::endl;
 
     ifs.close();
     return 0;
