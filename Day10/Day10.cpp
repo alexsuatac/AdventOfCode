@@ -6,6 +6,7 @@
 #include <vector>
 
 static long X = 1; // global var for the register
+static const size_t SCREEN_WIDTH = 40;
 struct instruction {
     std::string instruction;
     int val;
@@ -16,6 +17,7 @@ struct state {
     std::string instruction;
     unsigned cycleN;
     long XatCycleN;
+    char pixel;
 };
  // store the instruction, cycle at which it was
  // executed and the value of X for each step of the program
@@ -33,27 +35,41 @@ std::vector<std::string> split(const std::string& str) {
     return result;
 }
 
+// return true if pixel is in sprite
+bool isCurPixelInSprite(unsigned &curPixel) {
+    if (curPixel == SCREEN_WIDTH) curPixel = 0;
+    return (curPixel == (X-1) ||
+            curPixel == X ||
+            curPixel == (X+1) );
+}
+
 // process the code
 void runProcess() {
     unsigned cycle = 0;
+    unsigned &curPix = cycle; 
+    char pix;
 
     // store the initial state
-    state tmp = {.instruction = "initial", .cycleN = cycle, .XatCycleN = X};
+    state tmp = {.instruction = "initial", .cycleN = cycle, .XatCycleN = X, .pixel = '\0'};
     memory.push_back(tmp);
-
+    
     for(auto const& line : instructions) {
         if(line.instruction == "noop") {
+            (isCurPixelInSprite(curPix) ? pix = '#' : pix = '.');
             cycle += 1;
-            memory.push_back({.instruction = line.instruction, .cycleN = cycle, .XatCycleN = X});
+            
+            memory.push_back({.instruction = line.instruction, .cycleN = cycle, .XatCycleN = X, .pixel = pix});
         } else {
             // store the state at the first clock
+            (isCurPixelInSprite(curPix) ? pix = '#' : pix = '.');
             cycle += 1;
-            memory.push_back({.instruction = line.instruction, .cycleN = cycle, .XatCycleN = X});
+            memory.push_back({.instruction = line.instruction, .cycleN = cycle, .XatCycleN = X, .pixel = pix });
             
             // update the register and store the state with the second clock
+            (isCurPixelInSprite(curPix) ? pix = '#' : pix = '.');
             cycle += 1;
             X += line.val;
-            memory.push_back({.instruction = line.instruction, .cycleN = cycle, .XatCycleN = X});
+            memory.push_back({.instruction = line.instruction, .cycleN = cycle, .XatCycleN = X , .pixel = pix});
         }
     }
 }
@@ -65,6 +81,17 @@ int getSumOfSignalStrengths() {
             140 * memory[139].XatCycleN +
             180 * memory[179].XatCycleN +
             220 * memory[219].XatCycleN;
+}
+
+void renderScreen() {
+    size_t cnt = 1;
+    for(auto it = memory.begin()+1; it != memory.end(); ++it) {
+        std::cout << it->pixel;
+        if(cnt++ == SCREEN_WIDTH) {
+            std::cout << "\n";
+            cnt = 1;
+        }
+    }
 }
 
 int main() {
@@ -87,7 +114,7 @@ int main() {
 
     runProcess();
     std::cout << "part 1: " << getSumOfSignalStrengths() << std::endl;
-
+    renderScreen();
     ifs.close();
     return 0;
 }
