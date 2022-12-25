@@ -8,12 +8,18 @@
 #include <queue>
 
 // encapsulate monkey behaviour
+struct monkey_behaviour {
+    std::pair<int, std::string> op;
+    int test_op;
+    std::pair<size_t, size_t> pos_op;
+};
 struct monkey {
-    int cnt = 1;
+    int cnt = 0;
     std::queue<int> items;
-    int operation_result;
+    bool is_multiplied_by_self;
     bool test_result;
     size_t monkey_pos;
+    monkey_behaviour mb;
 };
 
 // split a string up
@@ -39,60 +45,91 @@ std::queue<int> getStartingItems(const std::string& itemList) {
     return items;
 }
 
-int doOperation(const std::string& operationStr, int item) {
-    int operand;
+auto getOperationOperand(const std::string& operationStr, bool& isMultipliedBySelf) {
+    int operand = -1;
     if (std::isdigit(operationStr[25])) {
         std::string numStr({operationStr.begin()+25, operationStr.end()}); 
         operand = std::stoi(numStr);
+        isMultipliedBySelf = false;
     } else {
-        operand = item;
+        isMultipliedBySelf = true;
     }
 
     std::string op ({operationStr[23]});
-    if(op == "+") {
-        return (item + operand) / 3;
+    if (op == "+") {
+        return std::pair<int, std::string>(operand, "+");
     }
     
-    return (item * operand) / 3;
+    return std::pair<int, std::string>(operand, "*");
 }
 
-bool doTest(const std::string& testStr, int item) {
+int doOperation(std::pair<int, std::string> op, int item, bool isMultipliedBySelf) {
+    if(op.second == "+") {
+        return (item + op.first) / 3;
+    } else if (isMultipliedBySelf) {
+        return (item * item) / 3;
+    }
+    
+    return (item * op.first) / 3;
+}
+
+int getTestOperand(const std::string& testStr) {
     std::string testVal({testStr.begin()+21, testStr.end()});
-    int val = std::stoi(testVal);
+    return std::stoi(testVal);
+}
+
+bool doTest(int val, int item) {
     return (item % val) == 0;
 }
 
-size_t getMonkeyPosition(const std::string& m1, const std::string& m2, bool cond) {
+std::pair<size_t, size_t> getMonkeyPositionOperands(const std::string& m1, const std::string& m2) {
     std::string monkey1({m1.begin()+29, m1.end()});
     std::string monkey2({m2.begin()+30, m2.end()});
 
-    if(cond) {
-        return static_cast<size_t> (std::stoi(monkey1));
-    }
+    auto first = static_cast<size_t> (std::stoi(monkey1));
+    auto second = static_cast<size_t> (std::stoi(monkey2));
 
-    return static_cast<size_t> (std::stoi(monkey2));
+    return std::pair<size_t, size_t>(first, second); 
+}
+
+size_t getMonkeyPosition(size_t pos1, size_t pos2, bool cond) {
+    if (cond) {
+        return pos1;
+    }
+  
+    return pos2;
 }
 
 void processMonkeyState(std::vector<monkey>& monkeys, const int N = 20) {
     for(size_t i = 0; i < N; ++i) {
-        // increase count and move items from one monkey to the other
         for(auto & monkey : monkeys) {
-            monkey.cnt++;
-            monkeys[monkey.monkey_pos].items.push(monkey.items.front());
-            monkey.items.pop(); 
-        }
+            while(!monkey.items.empty()) {
+                // process the next state
+                monkey.items.front() = doOperation(monkey.mb.op, monkey.items.front(),
+                                                    monkey.is_multiplied_by_self);
+                monkey.test_result = doTest(monkey.mb.test_op, monkey.items.front());
+                monkey.monkey_pos = getMonkeyPosition(monkey.mb.pos_op.first,
+                                                        monkey.mb.pos_op.second, monkey.test_result);
 
-        // process the next state
-        for(auto & monkey : monkeys) {
-            tmp.operation_result = doOperation(curLine, tmp.items.front());
-            tmp.items.pop();
-            tmp.test_result = doTest(curLine, tmp.operation_result);
-            tmp.monkey_pos = getMonkeyPosition(testCondStr, curLine, tmp.test_result);
+                // increase count and move items from one monkey to the other
+                monkey.cnt++;
+                monkeys[monkey.monkey_pos].items.push(monkey.items.front());
+                monkey.items.pop();
+            }
         } 
+    }
+}
 
+int getItemHandlingCountProduct(std::vector<monkey>& monkeys) {
+    std::vector<int> counts;
+    for(auto const& monkey : monkeys) {
+        counts.push_back(monkey.cnt);
     }
 
+    std::sort(counts.begin(), counts.end());
+    return (counts[2] * counts[3]);
 }
+
 
 int main() {
     std::ifstream ifs;
@@ -109,32 +146,35 @@ int main() {
     std::vector<monkey> monkeys;
     int cnt = 0;
     std::string testCondStr;
-    monkey tmp;
+    monkey m;
     while(std::getline(ifs, curLine)) {
         // set up initial state
         if (cnt == 1) {
-            tmp.items = getStartingItems(curLine);
+            m.items = getStartingItems(curLine);
         } else if (cnt == 2) {
-            tmp.operation_result = doOperation(curLine, tmp.items.front());
-            tmp.items.pop();
+            m.mb.op = getOperationOperand(curLine, m.is_multiplied_by_self);
         } else if (cnt == 3) {
-            tmp.test_result = doTest(curLine, tmp.operation_result);
+            m.mb.test_op = getTestOperand(curLine);
         } else if (cnt == 4) {
             testCondStr = {curLine};
         } else if (cnt == 5) {
-            tmp.monkey_pos = getMonkeyPosition(testCondStr, curLine, tmp.test_result);
+            m.mb.pos_op = getMonkeyPositionOperands(testCondStr, curLine);
         } else if (cnt == 6) {
-            monkeys.push_back(tmp);
-            tmp = {};
+            monkeys.push_back(m);
+            m = {};
             cnt = -1;
         }
         cnt++;
     }
     // push last monkey's initial state to the monkey vector
-    monkeys.push_back(tmp);
+    monkeys.push_back(m);
     
     // process the state N times
+    processMonkeyState(monkeys);
 
+    // get the product of the two most
+    // active monkeys' item handling count
+    std::cout << getItemHandlingCountProduct(monkeys) << "\n";
 
     ifs.close();
     return 0;
