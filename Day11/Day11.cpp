@@ -127,7 +127,7 @@ int getItemHandlingCountProduct(std::vector<monkey>& monkeys) {
     }
 
     std::sort(counts.begin(), counts.end());
-    return (counts[2] * counts[3]);
+    return counts[6] * counts[7];
 }
 
 
@@ -136,7 +136,7 @@ int main() {
 
     // requires input.txt to be in same directory
     // that is application is being run from
-    ifs.open("./test.txt", std::ifstream::in);
+    ifs.open("./input.txt", std::ifstream::in);
 
     // getStartingItems("Starting items: 54, 65, 75, 74");
     // doOperation("Operation: new = old + 223", 2);
