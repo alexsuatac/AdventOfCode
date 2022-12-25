@@ -100,7 +100,7 @@ size_t getMonkeyPosition(size_t pos1, size_t pos2, bool cond) {
     return pos2;
 }
 
-void processMonkeyState(std::vector<monkey>& monkeys, const int N = 20) {
+void processMonkeyState(std::vector<monkey>& monkeys, const int N) {
     for(size_t i = 0; i < N; ++i) {
         for(auto & monkey : monkeys) {
             while(!monkey.items.empty()) {
@@ -138,10 +138,6 @@ int main() {
     // that is application is being run from
     ifs.open("./input.txt", std::ifstream::in);
 
-    // getStartingItems("Starting items: 54, 65, 75, 74");
-    // doOperation("Operation: new = old + 223", 2);
-    // testConditionTrue("Test: divisible by 13", 2);
-    // getMonkeyPosition("If true: throw to monkey 11", "If false: throw to monkey 323", false);
     std::string curLine;
     std::vector<monkey> monkeys;
     int cnt = 0;
@@ -169,8 +165,11 @@ int main() {
     // push last monkey's initial state to the monkey vector
     monkeys.push_back(m);
     
-    // process the state N times
-    processMonkeyState(monkeys);
+    // process the state 20 times for part 1
+    processMonkeyState(monkeys, 20);
+
+    // process the state 10,000 times for part 2
+    // processMonkeyState(monkeys, 10000);
 
     // get the product of the two most
     // active monkeys' item handling count
